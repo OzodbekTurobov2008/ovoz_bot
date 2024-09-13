@@ -56,6 +56,7 @@ class Database:
         SELECT * FROM Users
         """
         return self.execute(sql, fetchall=True)
+    
 
 
     def select_user(self, **kwargs):
@@ -87,7 +88,7 @@ class Database:
               """
         self.execute(sql, commit=True)
 
-    def add_audio(self, voice_file_id:str,title:str):
+    def add_audio(self, voice_file_id:str,title:str):  
 
         sql = """
         INSERT INTO Audio(voice_file_id, title) VALUES(?, ?)
@@ -105,9 +106,6 @@ class Database:
         SELECT * FROM Audio WHERE title LIKE "%{title}%"
         """
         return self.execute(sql, fetchall=True)
-
-
-
 
 
 

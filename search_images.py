@@ -6,7 +6,7 @@ async def fetch_inline_search_images(query: str, count: int = 10):
     
     payload = json.dumps({
     "q": f"{query}",
-    "num": 20
+    "num": 10
     })
     headers = {
     'X-API-KEY': 'c67ca95163dc03a0427988e7e066f3010e4e95ac',
@@ -18,4 +18,3 @@ async def fetch_inline_search_images(query: str, count: int = 10):
     results = [img["imageUrl"] for img in  response.json()["images"] ]
     results = list(filter(lambda x:x.endswith(".png") or x.endswith(".jpg"),results ))
     return results[:count]
-
