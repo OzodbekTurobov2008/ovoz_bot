@@ -18,6 +18,9 @@ admin_button = ReplyKeyboardMarkup(
 
 users_button = ReplyKeyboardMarkup(
     keyboard=[
+        [
+            KeyboardButton(text="👤Admin bilan bog'lanish"),
+        ],
         [    
             KeyboardButton(text="Uff kechasiyam tinchli yõğa😕"),
             KeyboardButton(text="Narmalni bola busen buladiyu uka..."),
@@ -100,4 +103,15 @@ users_button = ReplyKeyboardMarkup(
         
     ],
     
+)
+
+
+
+admin_button1 = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text="👨‍💼Admin"),        
+        ]      
+    ],
+  resize_keyboard=True
 )

@@ -6,3 +6,9 @@ class Adverts(StatesGroup):
 class AudioState(StatesGroup):
     title = State()
     voice_file_id = State()
+
+class AdminMSG(StatesGroup):
+    msg = State()
+
+class Adverts(StatesGroup):
+    adverts = State()

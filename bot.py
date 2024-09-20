@@ -1,12 +1,8 @@
 from aiogram import Bot, Dispatcher
-from aiogram import Bot, Dispatcher, types
-from aiogram.enums import ParseMode
-from aiogram.filters import CommandStart,Command
+from aiogram import Bot, Dispatcher
+from aiogram.filters import CommandStart,Command, or_f
 from aiogram import F
-from aiogram.types import (Message,InlineQuery,InlineKeyboardButton,
-                           InlineQueryResultArticle,InputTextMessageContent,
-                           InlineQueryResultPhoto,InputMediaPhoto,InlineQueryResultCachedVoice,)
-from aiogram.types.inline_query_result_photo import InlineQueryResultType
+from aiogram.types import (Message,InlineQuery,InlineKeyboardButton, InlineQueryResultCachedVoice,)
 from data import config
 import asyncio
 import logging
@@ -17,10 +13,10 @@ from filterss.admin import IsBotAdminFilter
 from filterss.check_sub_channel import IsCheckSubChannels
 from keyboard_buttons import admin_keyboard
 from aiogram.fsm.context import FSMContext #new
-from states.reklama import Adverts, AudioState
+from states.reklama import Adverts, AudioState, AdminMSG
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from keyboard_buttons.admin_keyboard import users_button
-import time, tracemalloc
+import time
 
 ADMINS = config.ADMINS
 TOKEN = config.BOT_TOKEN
@@ -29,6 +25,7 @@ CHANNELS = config.CHANNELS
 
 dp = Dispatcher()
 
+commands = ["/start", "/about", "/help", "/xabar", "/admin"]
 
 @dp.message(CommandStart())
 async def start_command(message:Message):
@@ -37,7 +34,7 @@ async def start_command(message:Message):
     telegram_id = message.from_user.id
     try:
         db.add_user(full_name=full_name,telegram_id=telegram_id)
-        await message.answer(text="Assalomu alaykum, botimizga hush kelibsiz\nBu bot orqali siz hohlagan ovozingizni topishingiz mumkin!", reply_markup=users_button)
+        await message.answer(text="Assalomu alaykum, botimizga hush kelibsiz🙂\nBu bot orqali siz hohlagan ovozingizni topishingiz mumkin!✅", reply_markup=users_button)
     except:
         await message.answer(text="Assalomu alaykum", reply_markup=users_button)
 
@@ -45,7 +42,6 @@ async def start_command(message:Message):
 @dp.message(F.text == 'Assalamu alaykum')
 async def get_file_id(message:Message):
     await message.answer_audio(audio="AwACAgIAAxkBAAMXZsMpTpOvz-AJyVCetZVAkUIcRI8AAq03AAIlMLlIsUbLhywDJ2M1BA")
-
 
 # 
 @dp.message(F.text == 'Assalamu alaykum2')
@@ -273,12 +269,36 @@ async def get_file_id(message:Message):
 #help commands
 @dp.message(Command("help"))
 async def help_commands(message:Message):
-    await message.answer("Sizga qanday yordam kerak!")
+    await message.answer("""
+🔥Buyruqlar 
+Botdan foydalanish uchun ... 
+/about - Bot haqida 
+/start - Botni ishga tushurish
+                         
+Admin bilan bog'lanmoqchi bo'lsangiz "/xabar" tugmasini bosing va ✉️ Xabaringizni yozib qoldiring !""")
+
+
+
+@dp.message(or_f(Command("xabar"), (F.text == "👤Admin bilan bog'lanish")))
+async def help_commands(message:Message,state:FSMContext):
+    await message.answer("Xabaringizni yozib qoldiring✍🏻 \nMurojatingiz 👤 adminga boradi!")
+
+    await state.set_state(AdminMSG.msg)
+
+@dp.message(F.text.not_in(commands),AdminMSG.msg)
+async def xabar(message: Message, state: FSMContext):
+    msg = message.text
+    await message.answer("Sizning xabaringiz 👤adminga bordi✅\n👤Admin albatta javob yozadi!")
+    text = f"📬<b>Ovoz qani Bot dan murojat keldi! \n</b>👤<b>Foydalanuvchi:</b>➡️ @{message.from_user.username}\n📜<b>Xabar</b>: {msg}"
+    for admin in ADMINS:
+        await bot.send_message(chat_id=admin, text=text, parse_mode='html')
+    await state.clear()
+
 
 
 @dp.message(Command("about"))
 async def about_commands(message:Message):
-    await message.answer("Bot sizga qiziqarli ovozlarni yuklab beradi!")
+    await message.answer("Bot dan shikoyatingiz yoki taklifingiz bo'lsa📜\n👤Admin bilan bog'lanish tugmasini bosing\nYoki menu dan 📜 /xabar ni bosib murojatingizni yozing✅\nva xabaringizni yozib qoldiring✅\n\nBotdan foydalanish tartibi👇🏻\n👉🏻@voise_ovozqani_bot yozib o'zingizga kerakli ovozlarni toping🙂")
 
 
 @dp.inline_query()
@@ -291,7 +311,8 @@ async def inline_voice_search(inline_query: InlineQuery):
             id=f"{audio[0]}",
             voice_file_id=audio[1],
             title=audio[2]
-        ) for audio in audiolar[:15]
+            
+        ) for audio in audiolar[:20]
     ]
     await inline_query.answer(results=results)
 
@@ -306,7 +327,7 @@ async def inline_voice_search(inline_query: InlineQuery):
         try:
             all_audios = await db.select_all_audios()
             print("***************",all_audios,"***************")
-            for item in all_audios[:15]:
+            for item in all_audios[:20]:
                 voice_file_id = item[1]
                 try:
                     result = InlineQueryResultCachedVoice(
@@ -324,7 +345,7 @@ async def inline_voice_search(inline_query: InlineQuery):
         # Query entered, search for matching audio files
         try:
             audiolar = await db.search_audios_title(title)
-            for audio in audiolar[:15]:
+            for audio in audiolar[:20]:
                 voice_file_id = audio[1]
                 if voice_file_id and isinstance(voice_file_id, str) and voice_file_id.startswith("AwACAg"):
                     try:
@@ -360,7 +381,7 @@ async def kanalga_obuna(message:Message):
         inline_channel.add(InlineKeyboardButton(text=f"{index+1}-kanal",url=ChatInviteLink.invite_link))
     inline_channel.adjust(1,repeat=True)
     button = inline_channel.as_markup()
-    await message.answer(f"{text} kanallarga azo bo'ling",reply_markup=button)
+    await message.answer(f"{text} kanallarga azo bo'ling!",reply_markup=button)
 
 
 @dp.message(Command("admin"),IsBotAdminFilter(ADMINS))
@@ -369,7 +390,7 @@ async def is_admin(message:Message):
 
 
 
-@dp.message(F.text=="Foydalanuvchilar soni!",IsBotAdminFilter(ADMINS))
+@dp.message(F.text=="Foydalanuvchilar soni",IsBotAdminFilter(ADMINS))
 async def users_count(message:Message):
     counts = db.count_users()
     text = f"Botimizda {counts[0]} ta foydalanuvchi bor"
@@ -407,14 +428,14 @@ async def send_advert(message:Message,state:FSMContext):
 
 @dp.message(F.text=="audio qo'shish",IsBotAdminFilter(ADMINS))
 async def auido_adds(message:Message,state:FSMContext):
-    await message.answer("Audio nomini kiriting")
+    await message.answer("Audio nomini kiriting!")
     await state.set_state(AudioState.title)
 
 
 
 @dp.message(F.text,AudioState.title)
 async def auido_title(message:Message,state:FSMContext):
-    await message.answer("Audio yuboring")
+    await message.answer("Audio yuboring!")
     title = message.text
     await state.set_state(AudioState.voice_file_id)
     await state.update_data(title=title)
@@ -427,7 +448,7 @@ async def auido_voice(message:Message,state:FSMContext):
     voice_file_id = message.voice.file_id
     db.add_audio(voice_file_id=voice_file_id,title=title)
 
-    await message.answer("Audio muvaffaqiyatli bazaga qo'shildi!")
+    await message.answer("Tabriklaymiz Audio muvaffaqiyatli bazaga qo'shildi!✅")
     await state.clear()
 
 
