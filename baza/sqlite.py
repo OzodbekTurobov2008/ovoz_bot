@@ -58,7 +58,6 @@ class Database:
         return self.execute(sql, fetchall=True)
     
 
-
     def select_user(self, **kwargs):
         sql = "SELECT * FROM Users WHERE "
         sql, parameters = self.format_args(sql, kwargs)

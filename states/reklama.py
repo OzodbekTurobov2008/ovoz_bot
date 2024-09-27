@@ -12,3 +12,4 @@ class AdminMSG(StatesGroup):
 
 class Adverts(StatesGroup):
     adverts = State()
+
